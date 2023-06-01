@@ -66,8 +66,9 @@ class Bird:
         return r_img 
 
     def update(self):
-        self.image = self.MOVEMENTS.get()
-        self.MOVEMENTS.put(self.image)
+        if self.state == 1:
+            self.image = self.MOVEMENTS.get()
+            self.MOVEMENTS.put(self.image)
     
     def draw(self,window): 
         if self.x and self.y :

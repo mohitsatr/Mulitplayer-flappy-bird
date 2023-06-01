@@ -76,7 +76,7 @@ def main():
  
     pushvalue = 50
     gravity_limit = 2 
-    initial_gravity = 0
+    initial_gravity = 0.3
 
    # player1_bird.state = 3 
 
@@ -95,26 +95,24 @@ def main():
                     initial_gravity = 0 
                     #oring_pos = push_pull_coord(b.y,push_value)
                     player1_bird.y -= pushvalue
+                    player1_bird.state = 1
 
 
 
-
-        if begin : 
+         
         
-            if len(Pipes) == 0:  
-                fill_pipes()     
+        if len(Pipes) == 0:  
+            fill_pipes()     
+    
+        for pipe in Pipes:
+            pipe.draw(window)
+            pipe.move(2)
+            if pipe.x < -50:
+                Pipes.remove(pipe)
         
-            for pipe in Pipes:
-                pipe.draw(window)
-                pipe.move(2)
-
-                if pipe.x < -50:
-                    Pipes.remove(pipe)
-            
-            
-        
-            if initial_gravity < gravity_limit:
-                initial_gravity += 0.075
+    
+        if initial_gravity < gravity_limit:
+            initial_gravity += 0.075
             
 
 
@@ -130,18 +128,19 @@ def main():
       # #  player2.move(keys)
         player1_bird.draw(window)
 
-        player1_bird.draw(window)
+        player2_bird.draw(window)
 
        # player2_bird.draw(window)
         
-      #  player1_bird.y += initial_gravity
+        player1_bird.y += initial_gravity
+        player1_bird.state = 2
     
         #b2.draw(window)
       #   player1.draw(window)
       #   p.draw(window)
       #   # box1.draw(window)
-    
-        player2_bird.x ,player2_bird.y = n.send((player1_bird.x,player1_bird.y))# sending 
+        player2_bird.x,player2_bird.y = n.send((player1_bird.x,player1_bird.y))
+        #player2_bird.x ,player2_bird.y = n.send((player1_bird.x,player1_bird.y))# sending 
         
         pygame.display.update()
         clock.tick(60)

@@ -20,21 +20,23 @@ def start():
     s.listen()
     print("Server started waiting for new connection : ...")
 
-PlayersList = [
-    Player("Mohit"), Player("Raj")
-]
-
+# PlayersList = [
+#     Player("Mohit"), Player("Raj")
+# ]
 initial_position = window_width//2.5,window_height//2.5
-PlayersList[1].position = initial_position
+
+
+Pos = [(initial_position),(initial_position)]
 
 
 def threaded_client(player,conn,addr):
-    conn.send(pickle.dumps(initial_position)) # it will send data immediately once client is connected  
+    conn.send(pickle.dumps(Pos[player])) # it will send data immediately once client is connected  
 
     while True:
         data = pickle.loads(conn.recv(2048))
+        print("received :",data)
 
-        PlayersList[player].postion = data 
+        Pos[player] = data 
 
         if not data :
             print("disconnected")
@@ -42,10 +44,11 @@ def threaded_client(player,conn,addr):
 
         else:
             if player == 0 :
-                reply =  PlayersList[1].position 
+                reply =  Pos[1] 
 
             elif player == 1:
-                reply = PlayersList[0].position
+                reply = Pos[0]
+                
 
 
         conn.sendall(pickle.dumps(reply))
