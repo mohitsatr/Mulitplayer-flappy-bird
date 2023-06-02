@@ -44,7 +44,7 @@ class Bird:
         self.color = color 
 
         self.image = pygame.image.load(f"Assets/{color}bird-midflap.png")
-    
+
 
         self.MOVEMENTS = Queue(3)
         
@@ -58,25 +58,40 @@ class Bird:
         if c_state == 1 :
             r_img = pygame.transform.rotate(self.image,45)
         
-        if c_state == 2:
-            r_img = pygame.transform.rotate(self.image,self.angle)
-            self.angle -= 1
-        else :
+
+        if c_state == 2 :
             r_img = self.image
+       
         return r_img 
+    
+    def get_rect(self,image):
+        return image.get_rect(topleft=(self.x,self.y))
+
+    def collision(self,obj):
+        bird_rectangle = self.get_rect(self.image)
+
+        if bird_rectangle.colliderect(obj):
+            return True 
+
 
     def update(self):
         if self.state == 1:
-            self.image = self.MOVEMENTS.get()
-            self.MOVEMENTS.put(self.image)
-    
+            tmpr = self.MOVEMENTS.get()
+            self.image = tmpr 
+            self.image = self.change_state(1)# rotated image shouldnot be queue for next round 
+
+            self.MOVEMENTS.put(tmpr)
+
+        else :
+            self.image = self.change_state(2)
+      
+
     def draw(self,window): 
         if self.x and self.y :
             self.update()
-            # self.image = self.change_state(self.state)
+            
             window.blit(self.image,self.image.get_rect(topleft=(self.x,self.y)))#self.image.get_rect(topleft=(self.x,self.y)))
-        
-
+    
         if self.angle >= 90:
             self.angle = 90 
         
@@ -84,14 +99,17 @@ class Bird:
             self.angle = -90
 
 
-GAP = 20 
+GAP = 50
 starting = window_width+50
-def place_pipes():
-    red_coors = (starting,random.randint(-500,-100))
+def place_pipes(): #red pipe minimum y = -250
+    red_coors = (starting,random.randint(-250,-100))#random.randint(-450,-100))
+    grn = (starting+random.randint(0,GAP),300) #minimum green y = 300
 
-    green_coors = (starting+50,red_coors[1]+GAP+int(window_height*1/1.5))
 
-    return (red_coors,green_coors)
+
+  #  green_coors = (starting+50,red_coors[1]+GAP+int(window_height*1/1.5))
+
+    return (red_coors,grn)
 
 
 class Pipe:
@@ -100,8 +118,14 @@ class Pipe:
         self.y = y
         self.image = self.get_pipe(color)
 
+        self.color = "red" if color == 1 else "green"
 
+        
     
+    def get_rect(self,image):
+        return image.get_rect(topleft=(self.x,self.y))
+    
+
     def get_pipe(self,color):
         if color == 1:
             return pygame.transform.rotate(pygame.image.load("Assets/pipe-red.png"),180)
@@ -115,6 +139,12 @@ class Pipe:
 
     def draw(self,window):
         window.blit(self.image,self.image.get_rect(topleft=(self.x,self.y)))
+
+    def __eq__(self, __value: object) -> bool:
+        return self.color.__eq__(__value)
+
+P = Pipe(40,80,1)
+
 
 
 def move_floor(floor,val):
