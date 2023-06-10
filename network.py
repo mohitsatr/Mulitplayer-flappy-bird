@@ -5,7 +5,7 @@ import numpy
 class Network:
     def __init__(self) :
         self.HOST =  "localhost"  
-        self.PORT = 5555
+        self.PORT = 6666
         self.client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.addr = ((self.HOST,self.PORT))
     
@@ -32,6 +32,15 @@ class Network:
         return data
     
 
+    def send_score(self,score):
+        self.client.send(pickle.dumps(score))
+
+
+    def restart_request(self):
+        self.client.send(pickle.dumps("restart"))
+        data = pickle.loads(self.client.recv(2048))
+        return data 
+    
 
 
 

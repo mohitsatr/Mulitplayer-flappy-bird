@@ -2,9 +2,8 @@ import pygame
 from queue  import Queue
 import random 
 
-window_width = 370
+window_width = 400
 window_height = 400
-
 
 
 BLACK = (0, 0, 0)
@@ -21,7 +20,7 @@ navy = (0, 0, 128)
 gray = (128, 128, 128)
 
 
-
+SPEED = 2.3
 # 1 : flying 
 # 2 : falling 
 #3 : mid 
@@ -29,9 +28,97 @@ gray = (128, 128, 128)
 def rotate(image):
     return pygame.transform.rotate(image,45)
 
-# im = pygame.image.load("Assets\\bluebird-midflap.png")
-# rotated = rotate(im)
-# pygame.image.save(rotated,"B:\Mohit\\Projects\\fl-mu\Assets\\rotated.png")
+def scale(obj,x=None,y=None):
+    if x == None:
+        x = obj.get_width()
+    elif y == None  :
+        y = obj.get_height()
+    return pygame.transform.scale(obj,(x,y))
+
+
+
+Floor_x = 350 # floor starts at 
+floor = scale(pygame.image.load("Assets\\base.png"),x=window_width+100)
+floor_rect = floor.get_rect(topleft=(0,Floor_x))
+
+
+def draw_floor(window):
+    window.blit(floor,floor_rect)             
+    move_floor(floor_rect,SPEED)  
+
+class Flappy(pygame.sprite.Sprite):
+    def __init__(self,color="blue") -> None:
+        pygame.sprite.Sprite.__init__(self)
+        self.bird_images = []
+        self.color = color 
+        self.current = 0
+        self.bird_images.append(pygame.image.load(f"Assets\\{self.color}bird-upflap.png"))
+        self.bird_images.append(pygame.image.load(f"Assets\\{self.color}bird-midflap.png"))
+        self.bird_images.append(pygame.image.load(f"Assets\\{self.color}bird-downflap.png"))
+
+        
+        self.image = self.bird_images[self.current]
+
+        self.rect= self.image.get_rect()
+        self.rect.topleft = (0,0)
+        self.fly = False
+        
+        self.grav  = 0
+        self.angle = 1
+
+    def render(self,window):
+        if self.rect.x != 0 :
+            window.blit(self.image,self.rect)
+    
+    def is_flying(self):
+        self.grav = 3 # it restricts the total_acc from incresasing beyond -16 
+        total_acc = 0
+        self.grav -= 7 # direct relationship with bird's flying and falling . 
+        total_acc += self.grav*(-self.grav) # without minus sign , variable will become positive 
+
+        self.rect.y += total_acc
+      
+        total_acc = 0 
+
+        
+        
+        
+            
+
+    def update(self,window,fly,collision,begin):
+        self.render(window)
+        if begin :  
+            if not collision:
+                self.image = self.bird_images[int(self.current)]
+
+                if fly :
+                    self.is_flying()
+            
+        
+                if self.grav < 2.5:  # means bird is flying 
+                    self.grav += 0.3
+                    img = pygame.transform.rotate(self.image,25)
+                    self.image = img
+                
+                
+                if self.grav >= 2.5  :  
+                    self.grav = 3 
+                    img = pygame.transform.rotate(self.image,-25)
+                    self.image = img 
+            
+            
+                self.rect.y += self.grav 
+
+            else:
+                global SPEED
+                SPEED = 0
+                self.grav = 3
+                if self.rect.y < 320:
+                    self.rect.y += self.grav
+                                        
+
+            
+
 
 class Bird:
     angle = 0 
@@ -40,7 +127,7 @@ class Bird:
         self.angle = 0 
         self.x = None 
         self.y = None 
-        self.state = 2  
+        self.state = 3
         self.color = color 
 
         self.image = pygame.image.load(f"Assets/{color}bird-midflap.png")
@@ -53,17 +140,23 @@ class Bird:
         self.MOVEMENTS.put(pygame.image.load(f"Assets\\{self.color}bird-downflap.png"))
     
     
+
+    
     def change_state(self,c_state): # so this only rotates the img , does to show it on window
         r_img = ""
         if c_state == 1 :
-            r_img = pygame.transform.rotate(self.image,45)
+            r_img = pygame.transform.rotate(self.image,self.angle)
+            if self.angle < 45 :
+                self.angle += 2
         
 
-        if c_state == 2 :
-            r_img = self.image
-       
-        return r_img 
+        elif c_state == 2 :
+            r_img = pygame.transform.rotate(self.image,self.angle)
+            if self.angle > -20:
+                self.angle -= 2
+
     
+        return r_img
     def get_rect(self,image):
         return image.get_rect(topleft=(self.x,self.y))
 
@@ -82,8 +175,9 @@ class Bird:
 
             self.MOVEMENTS.put(tmpr)
 
-        else :
+        elif self.state == 2 :
             self.image = self.change_state(2)
+
       
 
     def draw(self,window): 
@@ -92,39 +186,33 @@ class Bird:
             
             window.blit(self.image,self.image.get_rect(topleft=(self.x,self.y)))#self.image.get_rect(topleft=(self.x,self.y)))
     
-        if self.angle >= 90:
-            self.angle = 90 
-        
-        if self.angle <= -90:
-            self.angle = -90
-
-
+    
 GAP = 50
 starting = window_width+50
+
+
 def place_pipes(): #red pipe minimum y = -250
     red_coors = (starting,random.randint(-250,-100))#random.randint(-450,-100))
     grn = (starting+random.randint(0,GAP),300) #minimum green y = 300
-
-
 
   #  green_coors = (starting+50,red_coors[1]+GAP+int(window_height*1/1.5))
 
     return (red_coors,grn)
 
-
-class Pipe:
+class Pipe(pygame.sprite.Sprite):
     def __init__(self,x,y,color=1) -> None:
+        pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.image = self.get_pipe(color)
 
         self.color = "red" if color == 1 else "green"
+        self.image = self.get_pipe(color)
 
-        
-    
-    def get_rect(self,image):
-        return image.get_rect(topleft=(self.x,self.y))
-    
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (self.x,self.y)
+
+    def render(self,window):
+        window.blit(self.image,self.rect)    
 
     def get_pipe(self,color):
         if color == 1:
@@ -132,24 +220,52 @@ class Pipe:
             
         else :
             return pygame.image.load("Assets/pipe-green.png")
+    def __str__(self):
+        return self.color
 
+    def move(self):    
+        self.rect.x  -= SPEED
 
-    def move(self,val):    
-        self.x  -= val 
+    def offscreen(self):
+        if self.rect.x < -50:
+            self.kill()
 
-    def draw(self,window):
-        window.blit(self.image,self.image.get_rect(topleft=(self.x,self.y)))
+    
+    
+    # def __eq__(self,val):
+    #     return self.color == val
 
-    def __eq__(self, __value: object) -> bool:
-        return self.color.__eq__(__value)
-
-P = Pipe(40,80,1)
-
-
+    def update(self,begin):
+        if begin :
+            self.move()
+            self.offscreen()
+            
 
 def move_floor(floor,val):
-    if floor.right == window_width :
+    if floor.right <= window_width :
         floor.right = window_width+100
     floor.right -= val
 
 
+
+class Button():
+	def __init__(self, x, y, image):
+		self.image = image
+		self.rect = self.image.get_rect()
+		self.rect.topleft = (x, y)
+
+	def draw(self,screen):
+		action = False
+
+		#get mouse position
+		pos = pygame.mouse.get_pos()
+
+		#check mouseover and clicked conditions
+		if self.rect.collidepoint(pos):
+			if pygame.mouse.get_pressed()[0] == 1:
+				action = True
+
+		#draw button
+		screen.blit(self.image, (self.rect.x, self.rect.y))
+
+		return action

@@ -2,7 +2,7 @@ import pygame
 import sys
 from network import Network
 from box import *
-from utilses import collision 
+from utilses import collision ,draw_text
 # 1 : flying 
 # 2 : falling 
 #3 : mid   
@@ -28,15 +28,19 @@ background = pygame.transform.scale(background_image, (window_width, window_heig
 Pipes = []
 
 
+font = pygame.font.SysFont('Bauhaus 93',60 )
+
+
 def fill_pipes():
     red_coor,green_coor = place_pipes()
-
+    score_line_x = red_coor[0]
+    score_line_y = green_coor[0]
 
     green_pipe = Pipe(green_coor[0],green_coor[1],2)
-    end_line = green_pipe.get_rect(green_pipe.image).midbottom
+    
     red_pipe = Pipe(red_coor[0],red_coor[1],1)
 
-    start_line = red_pipe.get_rect(red_pipe.image).midbottom
+
     
     Pipes.append(red_pipe)
     Pipes.append(green_pipe)
@@ -45,6 +49,12 @@ def fill_pipes():
 floor = scale(pygame.image.load("Assets\\base.png"),x=window_width+100)
 floor_rect = floor.get_rect(topleft=(0,350))
 clock = pygame.time.Clock()
+
+
+# scoreline = ScoreLine(score_line_x,0,score_line_y,window_height,)
+
+gameOver = False   
+
 
 
 def main():
@@ -61,19 +71,25 @@ def main():
     player2_bird = Bird("red")
 
 
-    # player1 = n.connect()
+    #scores
     score = 0
-    
+   
+    line_crossed = False 
+
+
     pushvalue = 50
     gravity_limit = 2 
     initial_gravity = 2
 
    # player1_bird.state = 3 
-    running = True  
+    
     fill_pipes()
+    start = window_width
+    running = True 
 
-    start_line = (0,0)
-    end_line = (0,0)
+    if running == False :
+        gameOver = True 
+
     while running:
 
         for event in pygame.event.get():
@@ -96,50 +112,65 @@ def main():
             player1_bird.state = 1
             initial_gravity += 0.075
             
+        else :
+            player1_bird.state = 2
+        
+
+         
 
 
-        window.blit(background,(0,0)) 
+
+        if line_crossed:  
+            fill_pipes()    
+            line_crossed = False
+             
 
 
-        if len(Pipes) == 0:  
-            fill_pipes()     
-
+        #print(scoreline.start_x,scoreline.start_y,"-",scoreline.end_x,scoreline.end_y)
 
         for pipe in Pipes:
             pipe.draw(window)
             pipe.move(2)
-            if pipe.x < -50:
+            if pipe.x < -100:
                 Pipes.remove(pipe)  
-
-            if pipe == "green":
-                end_line = pipe.get_rect(pipe.image).midtop
-
+        
+            
+        start = 0,0
+        end = 0,0
+        for pipe in Pipes :
             if pipe == "red":
-                start_line = pipe.get_rect(pipe.image).midbottom
-    
-            pygame.draw.line(window,WHITE,start_line,end_line,1)
+                start = pipe.get_rect(pipe.image).bottomright
 
-            if player1_bird.get_rect(player1_bird.image).clipline((start_line,end_line)):
-                score += 1 
-                start_line,end_line = (0,0),(0,0)
+            if pipe == "green":    
+                end = pipe.get_rect(pipe.image).topright
 
-        window.blit(floor,floor_rect)
-        move_floor(floor_rect,2)
+
+        if player1_bird.get_rect(player1_bird.image).clipline(start,end):
+            line_crossed = True 
+            score += 1
+            
+            
+        if not line_crossed:
+            pygame.draw.line(window,WHITE,start,end,1)
+
+
+        window.blit(floor,floor_rect)             
+        move_floor(floor_rect,2)               
         
         if player1_bird.collision(floor_rect):
-            running = False
+            running = False 
 
         player2_bird.draw(window)
 
         player1_bird.draw(window)
 
+        draw_text(window,str(score),font,WHITE,50,50)
 
 
        # player2_bird.draw(window)
-        print(score)
         player1_bird.y += initial_gravity
-        player1_bird.state = 2
     
+        print(player1_bird.x,player1_bird.y," ",player1_bird.angle)
         #b2.draw(window)
       #   player1.draw(window)
       #   p.draw(window)
@@ -148,10 +179,28 @@ def main():
         #player2_bird.x ,player2_bird.y = n.send((player1_bird.x,player1_bird.y))# sending 
         
         pygame.display.update()
-        clock.tick(60)
-        
+        clock.tick(30)
+
+
+def game_over():
+    while True :
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit() 
+                sys.exit()
+
+
+
+        window.blit(background,(0,0)) 
+
+        window.blit(floor,floor_rect)             
+        move_floor(floor_rect,2)    
+    
+        pygame.display.update()
 
 
 main()
+
+
 
 # i think - for each screen - there is their player that is player one .
