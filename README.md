@@ -19,3 +19,8 @@ This should be displayed : ```Server started waiting for new connection : ...```
 
 Current Problems : 
 game can be played by two players locally , but I have no tested multiplayer game play much because I made this project to get myself familiar with networking concepts and therefore my learning purpose was just to make it work . though as I will learn more , I will be updating and adding more features .**also Im open for contructive feedback on this project so please feel free to share your opinion.**
+
+### things to add :
+1. player can either create a room or join other player's room .
+2. sounds
+3. more complexity -increasing speed after certain score
