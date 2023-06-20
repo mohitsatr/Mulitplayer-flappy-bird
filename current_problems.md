@@ -1,11 +1,4 @@
 ### Next Step 
-- [ ] make it multiplayer 
+- [ ] make it a awesome online mutiplayer game 
 
-### Game 
-1. Keydown event happens for very brief period , less than a sec so it's effect is not seen .
-
-
-
-
-### client-server 
 
